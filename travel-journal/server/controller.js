@@ -10,21 +10,16 @@ const sequelize = new Sequelize(process.env.CONNECTION_STRING, {
     }
 });
 
-const countryId = 4
-const name = 3
-
 module.exports = {
     getCountries: (req, res) => {
     sequelize.query(`
       SELECT *
-      FROM cc_country AS c
-      JOIN cc_name AS n
-      ON c.country_id = n.country_id
-      WHERE n.country_id = ${countryId}
+      FROM countries
     `)
     .then(dbRes => res.status(200).send(dbRes[0]))
             .catch(err => console.log(err))
     },
+
     createCity: (req, res) => {
         console.log(req.body);
         const {
@@ -33,28 +28,35 @@ module.exports = {
             countryId
         } = req.body
     sequelize.query(`
-     INSERT into cc_country (name, rating, countryId)
-     VALUES ('${name}', '${rating}', '${countryId}')
+     INSERT into cities (name, rating, country_id)
+     VALUES ('${name}', ${rating}, ${countryId})
     `).then(dbRes => res.status(200).send(dbRes[0]))
     .catch(err => console.log(err))
     },
+
     getCities: (req, res) => {
     sequelize.query(`
-    SELECT name AS city, rating
-    FROM cc_country
-    WHERE city_id = ${countryId};
+    SELECT cities.city_id,
+    cities.name AS city,
+    cities.rating, countries.country_id,
+    countries.name AS country
+    FROM cities 
+    JOIN countries
+    ON cities.country_id = countries.country_id
     `) .then(dbRes => res.status(200).send(dbRes[0]))
     .catch(err => console.log(err))    
     },
+
     deleteCity: (req, res) => {
-        const { name } = req.params;
+        const { id } = req.params;
     sequelize.query(`
         DELETE
-        FROM cc_country
-        WHERE country_id = ${name}
+        FROM cities
+        WHERE city_id = ${id}
    `).then(dbRes => res.status(200).send(dbRes[0]))
    .catch(err => console.log(err))
     },
+
     seed: (req, res) => {
         sequelize.query(`
             drop table if exists cities;
